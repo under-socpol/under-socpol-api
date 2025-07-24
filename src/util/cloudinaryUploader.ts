@@ -84,3 +84,11 @@ export async function deleteUnusedImages(oldContent: any, newContent: any) {
 
   await Promise.all(removedIds.map(async (id) => await cloudinary.uploader.destroy(`articles/${id}`)));
 }
+
+export async function deleteImages(content: any) {
+  const ids = extractImageBlockIds(content);
+
+  if (ids.length === 0) return;
+
+  await Promise.all(ids.map(async (id) => await cloudinary.uploader.destroy(`articles/${id}`)));
+}

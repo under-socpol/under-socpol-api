@@ -95,7 +95,6 @@ export async function updateById(id: string, title: string, excerpt: string, con
     try {
       await CloudinaryUploader.deleteUnusedImages(oldArticle?.content, processedContent);
     } catch (err) {
-      console.log(err);
       throw ApiError.createApiError(`Failed to delete old images: ${(err as Error).message}`, 500);
     }
 
@@ -119,6 +118,14 @@ export async function updateIsPublishedById(id: string, is_published: boolean) {
 
 export async function deleteById(id: string) {
   try {
+    const result = await ArticlesRepository.findById(id);
+
+    try {
+      await CloudinaryUploader.deleteImages(result?.content);
+    } catch (err) {
+      throw ApiError.createApiError(`Failed to delete images: ${(err as Error).message}`, 500);
+    }
+
     await ArticlesRepository.deleteById(id);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
