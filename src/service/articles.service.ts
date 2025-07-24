@@ -3,10 +3,13 @@ import { Prisma } from "@prisma/client";
 import * as ArticlesRepository from "@/repository/articles.repository.js";
 import * as CategoriesRepository from "@/repository/categories.repository.js";
 import * as ApiError from "@/util/apiError.js";
+import * as CloudinaryUploader from "@/util/cloudinaryUploader.js";
 
 export async function create(title: string, excerpt: string, content: any, category_id: string, user_id: string) {
   try {
-    await ArticlesRepository.create(title, excerpt, content, category_id, user_id);
+    const processedContent = await CloudinaryUploader.processContentImages(content);
+
+    await ArticlesRepository.create(title, excerpt, processedContent, category_id, user_id);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003" && error.meta && "constraint" in error.meta) {
       if (error.meta.constraint === "articles_user_id_fkey") {
@@ -86,7 +89,17 @@ export async function getByUserId(user_id: string, take: number, page: number) {
 
 export async function updateById(id: string, title: string, excerpt: string, content: any, category_id: string, user_id: string) {
   try {
-    await ArticlesRepository.updateById(id, title, excerpt, content, category_id, user_id);
+    const oldArticle = await ArticlesRepository.findById(id);
+    const processedContent = await CloudinaryUploader.processContentImages(content);
+
+    try {
+      await CloudinaryUploader.deleteUnusedImages(oldArticle?.content, processedContent);
+    } catch (err) {
+      console.log(err);
+      throw ApiError.createApiError(`Failed to delete old images: ${(err as Error).message}`, 500);
+    }
+
+    await ArticlesRepository.updateById(id, title, excerpt, processedContent, category_id, user_id);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003" && error.meta && "constraint" in error.meta) {
       if (error.meta.constraint === "articles_user_id_fkey") {
