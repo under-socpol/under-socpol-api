@@ -3,30 +3,13 @@ node_modules/
 
 # Build output
 dist/
-build/
 
 # Environment variables
 .env
-.env.*.local
 
 # Logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+logs/
 
-# Prisma
-/src/generated/prisma
+# Prisma database
 prisma/dev.db
-prisma/*.db
-
-# OS-specific
-.DS_Store
-Thumbs.db
-
-# IDE/editor folders
-.vscode/
-.idea/
-
-# Optional: test output or coverage
-coverage/
